@@ -10,16 +10,16 @@ def get_stream_recording():
     os.system("sudo fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
 
 
-def get_audio_info(file = True, url = False, recordingFile="./recording.wav"):
+def get_audio_info(file = True, url = False):
     result = None
-    recordingSeg = AudioSegment.from_file(recordingFile)
+    recordingSeg = AudioSegment.from_file("/recordings/turntable.mp3")
     loudness = recordingSeg.dBFS
     if loudness <= -55:
         print("The volume of the audio sample is too low.")
         return
     if file:
         files = {
-            'file' : open(recordingFile, "rb"),
+            'file' : open("/recordings/turntable.mp3", "rb"),
         }
         data = {
             'api_token': token,
@@ -29,7 +29,7 @@ def get_audio_info(file = True, url = False, recordingFile="./recording.wav"):
     if url:
         data = {
             'api_token': token,
-            'url': "https://tinymansell.com/audio/recording.wav", 
+            'url': "https://tinymansell.com/audio/turntable.mp3", 
             'return': 'timecode,spotify',
         }
         result = requests.post('https://api.audd.io/', data=data)
@@ -52,16 +52,10 @@ def get_audio_info(file = True, url = False, recordingFile="./recording.wav"):
     print(outPrint1)
     print(outPrint2)
     return arrAll
-    #newJson = pp_json(jsonString)
-    
-    #return (str(tmp["result"]["title"]), str(tmp["result"]["artist"]))
-    
-    #return tmp
 
-# Record 10 seconds of audio
-#get_recording()
 
+# Record 10 seconds of audio from stream
 get_stream_recording()
-get_audio_info(recordingFile="/recordings/turntable.mp3")
+
 # Send recording to AuD and output response to data.json
-#get_audio_info()
+get_audio_info()
