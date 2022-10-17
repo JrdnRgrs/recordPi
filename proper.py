@@ -53,16 +53,16 @@ def pp_json(json_thing, sort=True, indents=4):
         print(json.dumps(json_thing, sort_keys=sort, indent=indents))
     return None
 
-def get_audio_info(file = True, url = False,recordingFile='./recording.wav'):
+def get_audio_info(file = True, url = False):
     result = None
-    recordingSeg = AudioSegment.from_file(recordingFile)
+    recordingSeg = AudioSegment.from_file('./recording.wav')
     loudness = recordingSeg.dBFS
     if loudness <= -55:
         print("The volume of the audio sample is too low.")
         return
     if file:
         files = {
-            'file' : open(recordingFile, "rb"),
+            'file' : open('./recording.wav', "rb"),
         }
         data = {
             'api_token': token,
@@ -76,15 +76,27 @@ def get_audio_info(file = True, url = False,recordingFile='./recording.wav'):
             'return': 'timecode,spotify',
         }
         result = requests.post('https://api.audd.io/', data=data)
-    #tmp = result.json()
-    #if (tmp["result"] == None):
-    #    return (None, None)
-    #print("title: " + str(tmp["result"]["title"]))
-    #print("artist: " + str(tmp["result"]["artist"]))
-    jsonString=(result.text)
-    #newJson = pp_json(jsonString)
+    r = json.loads(result.text)
+    if(result.status_code == requests.codes.ok):
+        artist = r["result"]["artist"]
+        title = r["result"]["title"]
+        album = r["result"]["album"]
+        release_date = r["result"]["release_date"]
+        release_year = release_date[0:4]
+        songUrl = r["result"]["spotify"]["external_urls"]["spotify"]
+        artistUrl = r["result"]["spotify"]["album"]["artists"][0]["external_urls"]["spotify"]
+        imageLink = r["result"]["spotify"]["album"]["images"][0]["url"]
+    arrAll = [artist, title, album, songUrl, artistUrl, imageLink]
+    #jsonString=(result.text)
     with open('data.json', 'w') as f:
-        json.dump(jsonString, f, ensure_ascii=False, indent=4)
+        json.dump(r, f, ensure_ascii=False, indent=4)
+    outPrint1 = f"{title} - {artist}"
+    outPrint2 = f"{album} ({release_year})"
+    print(outPrint1)
+    print(outPrint2)
+    return arrAll
+    #newJson = pp_json(jsonString)
+    
     #return (str(tmp["result"]["title"]), str(tmp["result"]["artist"]))
     
     #return tmp
