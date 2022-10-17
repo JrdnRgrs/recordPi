@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 load_dotenv()
-
+from pydub import AudioSegment
 import os
 token = os.environ.get("api-token")
 import requests
@@ -53,11 +53,16 @@ def pp_json(json_thing, sort=True, indents=4):
         print(json.dumps(json_thing, sort_keys=sort, indent=indents))
     return None
 
-def get_audio_info(file = True, url = False):
+def get_audio_info(file = True, url = False,recordingFile='./recording.wav'):
     result = None
+    recordingSeg = AudioSegment.from_file(recordingFile)
+    loudness = recordingSeg.dBFS
+    if loudness <= -55:
+        print("The volume of the audio sample is too low.")
+        return
     if file:
         files = {
-            'file' : open('./recording.wav', "rb"),
+            'file' : open(recordingFile, "rb"),
         }
         data = {
             'api_token': token,
@@ -71,13 +76,13 @@ def get_audio_info(file = True, url = False):
             'return': 'timecode,spotify',
         }
         result = requests.post('https://api.audd.io/', data=data)
-    tmp = result.json()
-    if (tmp["result"] == None):
-        return (None, None)
-    print("title: " + str(tmp["result"]["title"]))
-    print("artist: " + str(tmp["result"]["artist"]))
+    #tmp = result.json()
+    #if (tmp["result"] == None):
+    #    return (None, None)
+    #print("title: " + str(tmp["result"]["title"]))
+    #print("artist: " + str(tmp["result"]["artist"]))
     jsonString=(result.text)
-    #newJson=pp_json(jsonString)
+    #newJson = pp_json(jsonString)
     with open('data.json', 'w') as f:
         json.dump(jsonString, f, ensure_ascii=False, indent=4)
     #return (str(tmp["result"]["title"]), str(tmp["result"]["artist"]))
