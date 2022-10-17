@@ -6,6 +6,9 @@ token = os.environ.get("api-token")
 import requests
 import pyaudio
 import wave
+import json
+
+
 dataAuD = {
     'return': 'timecode,spotify',
     'api_token': token
@@ -49,9 +52,10 @@ wavefile.setframerate(samp_rate)
 wavefile.writeframes(b''.join(frames))
 wavefile.close()
 
-
-
-
-
+# Send API request with the recorded file.
 result = requests.post('https://api.audd.io/', data=dataAuD, files={'file': open('./basic_id.wav', 'rb')})
+tmp = result.json()
+jsonString=(result.text)
+with open('data.json', 'w') as f:
+  json.dump(jsonString, f, ensure_ascii=False)
 print(result.text)
