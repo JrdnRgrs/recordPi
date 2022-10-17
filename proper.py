@@ -46,6 +46,13 @@ def get_recording(recSeconds = 10, deviceIndex = 0,outputFilename='recording.wav
     wavefile.writeframes(b''.join(frames))
     wavefile.close()
 
+def pp_json(json_thing, sort=True, indents=4):
+    if type(json_thing) is str:
+        print(json.dumps(json.loads(json_thing), sort_keys=sort, indent=indents))
+    else:
+        print(json.dumps(json_thing, sort_keys=sort, indent=indents))
+    return None
+
 def get_audio_info(file = True, url = False):
     result = None
     if file:
@@ -67,12 +74,13 @@ def get_audio_info(file = True, url = False):
     tmp = result.json()
     if (tmp["result"] == None):
         return (None, None)
-#    print("title: " + str(tmp["result"]["title"]))
-#    print("artist: " + str(tmp["result"]["artist"]))
+    print("title: " + str(tmp["result"]["title"]))
+    print("artist: " + str(tmp["result"]["artist"]))
     jsonString=(result.text)
+    #newJson=pp_json(jsonString)
     with open('data.json', 'w') as f:
-        json.dump(jsonString, f, ensure_ascii=False)
-    return (str(tmp["result"]["title"]), str(tmp["result"]["artist"]))
+        json.dump(jsonString, f, ensure_ascii=False, indent=4)
+    #return (str(tmp["result"]["title"]), str(tmp["result"]["artist"]))
     
     #return tmp
 
