@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from pydub import AudioSegment
 import os
-token = os.environ.get("api-token")
+token = os.environ.get("API_TOKEN")
 import requests
 import json
 recordingFile = "/recordings/turntable.mp3"
