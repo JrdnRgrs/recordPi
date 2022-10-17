@@ -8,6 +8,13 @@ import pyaudio
 import wave
 import json
 
+recordingsFile = "/recordings/turntable.mp3"
+host = "192.168.1.244"
+port = "8000"
+mount = "/turntable.mp3"
+def get_stream_recording():
+    os.system(f"sudo fIcy -s .mp3 -o {recordingsFile} -M 10 -d {host} {port} {mount}")
+
 def get_recording(recSeconds = 10, deviceIndex = 0,outputFilename='recording.wav'):
     form_1 = pyaudio.paInt16 # 16-bit resolution
     chans = 1 # 1 channel
@@ -53,16 +60,16 @@ def pp_json(json_thing, sort=True, indents=4):
         print(json.dumps(json_thing, sort_keys=sort, indent=indents))
     return None
 
-def get_audio_info(file = True, url = False):
+def get_audio_info(file = True, url = False, recordingFile="./recording.wav"):
     result = None
-    recordingSeg = AudioSegment.from_file('./recording.wav')
+    recordingSeg = AudioSegment.from_file(recordingFile)
     loudness = recordingSeg.dBFS
     if loudness <= -55:
         print("The volume of the audio sample is too low.")
         return
     if file:
         files = {
-            'file' : open('./recording.wav', "rb"),
+            'file' : open(recordingFile, "rb"),
         }
         data = {
             'api_token': token,
@@ -102,6 +109,9 @@ def get_audio_info(file = True, url = False):
     #return tmp
 
 # Record 10 seconds of audio
-get_recording()
+#get_recording()
+
+get_stream_recording()
+get_audio_info(recordingFile="/recordings/turntable.mp3")
 # Send recording to AuD and output response to data.json
-get_audio_info()
+#get_audio_info()

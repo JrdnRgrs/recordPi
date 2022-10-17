@@ -2,15 +2,12 @@ from dotenv import load_dotenv
 load_dotenv()
 from pydub import AudioSegment
 import os
-token = os.environ.get("api-token")
+token = os.environ.get("API_TOKEN")
 import requests
 import json
-recordingFile = "/recordings/turntable.mp3"
-host = "192.168.1.244"
-port = "8000"
-mount = "/turntable.mp3"
+
 def get_stream_recording():
-    os.system(f"sudo fIcy -s .mp3 -o {recordingFile} -M 10 -d {host} {port} {mount}")
+    os.system("sudo fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
 
 
 def get_audio_info(file = True, url = False):
@@ -58,7 +55,7 @@ def get_audio_info(file = True, url = False):
 
 
 # Record 10 seconds of audio from stream
-get_stream_recording()
+#get_stream_recording()
 
 # Send recording to AuD and output response to data.json
 get_audio_info()
