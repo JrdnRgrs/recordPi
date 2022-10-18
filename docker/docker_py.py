@@ -3,21 +3,24 @@ load_dotenv()
 from pydub import AudioSegment
 import os
 token = os.environ.get("API_TOKEN")
+url_flag = os.environ.get("URL_FLAG")
 import requests
 import json
-
+import shutil
+audio_url = "https://tinymansell.com/audio/turntable.mp3"
 def get_stream_recording():
     os.system("sudo fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
 
 
 def get_audio_info(file = True, url = False):
     result = None
-    recordingSeg = AudioSegment.from_file("/recordings/turntable.mp3")
-    loudness = recordingSeg.dBFS
-    if loudness <= -55:
-        print("The volume of the audio sample is too low.")
-        return
+    
     if file:
+        recordingSeg = AudioSegment.from_file("/recordings/turntable.mp3")
+        loudness = recordingSeg.dBFS
+        if loudness <= -55:
+            print("The volume of the audio sample is too low.")
+            return
         files = {
             'file' : open("/recordings/turntable.mp3", "rb"),
         }
@@ -27,9 +30,19 @@ def get_audio_info(file = True, url = False):
         }
         result = requests.post('https://api.audd.io/', data=data, files = files)
     if url:
+        mr = requests.get(audio_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
+        if mr.status_code == 200:
+            with open("turntable.mp3", 'wb') as f:
+                mr.raw.decode_content = True
+                shutil.copyfileobj(mr.raw, f)
+        recordingSeg = AudioSegment.from_file("turntable.mp3")
+        loudness = recordingSeg.dBFS
+        if loudness <= -55:
+            print("The volume of the audio sample is too low.")
+            return
         data = {
             'api_token': token,
-            'url': "https://tinymansell.com/audio/turntable.mp3", 
+            'url': audio_url, 
             'return': 'timecode,spotify',
         }
         result = requests.post('https://api.audd.io/', data=data)
@@ -58,4 +71,7 @@ def get_audio_info(file = True, url = False):
 #get_stream_recording()
 
 # Send recording to AuD and output response to data.json
-get_audio_info()
+if url_flag == "yes":
+    get_audio_info(url=True,file=False)
+else:
+    get_audio_info()
