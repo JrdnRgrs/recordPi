@@ -33,10 +33,12 @@ jobs:
           context: ./docker/python-tools
           platforms: linux/amd64,linux/arm64
           push: true
+          tags: jrdnrgrs/recordpi/python-tools
       -
         name: Build and push recordpi
         uses: docker/build-push-action@v3
         with:
-          context: ./docker/python-tools
+          context: ./docker/recordpi
           platforms: linux/amd64,linux/arm64
           push: true
+          tags: jrdnrgrs/recordpi
