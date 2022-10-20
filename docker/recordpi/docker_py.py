@@ -1,13 +1,6 @@
 from dotenv import load_dotenv
-load_dotenv()
 from pydub import AudioSegment
 import os
-token = os.environ.get("API_TOKEN")
-return_values = 'timecode,spotify'
-url_flag = os.environ.get("URL_FLAG")
-audio_local_dir = "/recordings"
-data_file_path = f"{audio_local_dir}/data.json"
-url_prefix = "https://tinymansell.com/audio"
 import requests
 import json
 import shutil
@@ -18,15 +11,23 @@ from os.path import exists
 from datetime import datetime
 from datetime import timedelta
 
+# Read Env Vars
+load_dotenv()
+token = os.environ.get("API_TOKEN")
+url_flag = os.environ.get("URL_FLAG")
+return_values = 'timecode,spotify'
+audio_local_dir = "/recordings"
+data_file_path = f"{audio_local_dir}/data.json"
+clip_prefix = "turntable-"
+recording_seconds = "11"
+ice_host = "192.168.1.244 8000"
+ice_port = "8000"
+ice_mount = "/turntable.mp3"
+url_prefix = "https://tinymansell.com/audio"
+api_url="https://api.audd.io/"
+
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
-
-myNum=id_generator(4)
-file_name = f"turntable-{myNum}.mp3"
-path_name = f"/recordings/{file_name}"
-
-
-
 
 def is_file_older_than (file, delta): 
     cutoff = datetime.utcnow() - delta
@@ -35,15 +36,13 @@ def is_file_older_than (file, delta):
         return True
     return False
 
-def should_api_run():
+def should_api_run(data_filename):
     data_file_exists = exists(data_filename)
     if data_file_exists:
         is_file_older_than(data_filename, timedelta(seconds=162))
 
-def get_stream_recording(clip_path):
-    #os.system(f"fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
-    os.system(f"fIcy -s .mp3 -o {clip_path} -M 10 -d 192.168.1.244 8000 /turntable.mp3")
-    #return clip_path
+def get_stream_recording(clip_path,recording_seconds,ice_host,ice_port,ice_mount):
+    os.system(f"fIcy -s .mp3 -o {clip_path} -M {recording_seconds} -d {ice_host} {ice_port} {ice_mount}")
 
 def download_stream_recording(clip_url,save_path):
     mr = requests.get(clip_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
@@ -78,7 +77,7 @@ def api_call_url(api_token,clip_url,api_return_values,local_path_name):
     if is_clip_quiet(local_path_name):
         delete_clip(local_path_name)
         return
-    result = requests.post('https://api.audd.io/', data=data)
+    result = requests.post(api_url, data=data)
     return result
 def api_call_file(api_token,api_return_values,local_path_name):
     data = {
@@ -92,7 +91,7 @@ def api_call_file(api_token,api_return_values,local_path_name):
     if is_clip_quiet(local_path_name):
         delete_clip(local_path_name)
         return
-    result = requests.post('https://api.audd.io/', data=data, files = files)
+    result = requests.post(api_url, data=data, files = files)
     return result
 
 def get_audio_info(aud_url,clip_path_name,file = False, url = True):
@@ -134,11 +133,11 @@ def format_result(r):
 
 def record_pi():
     call_num=id_generator(4)
-    clip_file_name = f"turntable-{call_num}.mp3"
+    clip_file_name = f"{clip_prefix}-{call_num}.mp3"
     clip_path_name = f"{audio_local_dir}/{clip_file_name}"
     audio_clip_url = f"{url_prefix}/{clip_file_name}"
     # Record 10 seconds of audio from stream
-    get_stream_recording(clip_path_name)
+    get_stream_recording(clip_path_name,recording_seconds,ice_host,ice_port,ice_mount)
 
     # Send recording to AuD and output response to data.json
     if url_flag == "no":
