@@ -22,6 +22,7 @@ file_name = f"turntable-{myNum}.mp3"
 path_name = f"/recordings/{file_name}"
 audio_url = f"https://tinymansell.com/audio/{file_name}"
 data_filename = "/recordings/data.json"
+return_values = 'timecode,spotify'
 
 def is_file_older_than (file, delta): 
     cutoff = datetime.utcnow() - delta
@@ -39,6 +40,13 @@ def get_stream_recording():
     #os.system(f"fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
     os.system(f"fIcy -s .mp3 -o {path_name} -M 10 -d 192.168.1.244 8000 /turntable.mp3")
 
+def download_stream_recording(clip_url,save_path):
+    mr = requests.get(clip_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
+    if mr.status_code == 200:
+        with open(save_path, 'wb') as f:
+            mr.raw.decode_content = True
+            shutil.copyfileobj(mr.raw, f)
+
 def is_clip_quiet(clip_path):
     recordingSeg = AudioSegment.from_file(clip_path)
     loudness = recordingSeg.dBFS
@@ -48,39 +56,41 @@ def is_clip_quiet(clip_path):
     else:
         return False
 
+def api_call_url(api_token,clip_url,api_return_values,local_path_name):
+    data = {
+        'api_token': api_token,
+        'url': clip_url,
+        'return': api_return_values,
+    }
+    # Download the fIcy recorded file
+    download_stream_recording(clip_url,local_path_name)
+    # Test if the file is too quiet
+    if is_clip_quiet(local_path_name):
+        return
+    result = requests.post('https://api.audd.io/', data=data)
+    return result
+def api_call_file(api_token,api_return_values,local_path_name):
+    data = {
+        'api_token': api_token,
+        'return': api_return_values,
+    }
+    files = {
+        'file' : open(local_path_name, "rb"),
+    }
+    # Test if the file is too quiet
+    if is_clip_quiet(local_path_name):
+        return
+    result = requests.post('https://api.audd.io/', data=data, files = files)
+    return result
+
 def get_audio_info(file = True, url = False):
     result = None
 
     if file:
-        # Test if the file is too quiet
-        if is_clip_quiet(path_name):
-            return
-        files = {
-            'file' : open(path_name, "rb"),
-        }
-        data = {
-            'api_token': token,
-            'return': 'timecode,spotify',
-        }
-        result = requests.post('https://api.audd.io/', data=data, files = files)
+        result = api_call_file(token,return_values,path_name)
+
     if url:
-        # Download the fIcy recorded file 
-        mr = requests.get(audio_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
-        if mr.status_code == 200:
-            with open(path_name, 'wb') as f:
-                mr.raw.decode_content = True
-                shutil.copyfileobj(mr.raw, f)
-
-        # Test if the file is too quiet
-        if is_clip_quiet(path_name):
-            return
-
-        data = {
-            'api_token': token,
-            'url': audio_url,
-            'return': 'timecode,spotify',
-        }
-        result = requests.post('https://api.audd.io/', data=data)
+        result = api_call_url(token,audio_url,return_values,path_name)
     
     jsonString=(result.text)
     #print(jsonString)
