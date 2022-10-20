@@ -31,6 +31,7 @@ s3 = boto3.client('s3',aws_access_key_id=aws_access_key_id,aws_secret_access_key
 return_values = 'timecode,spotify'
 audio_local_dir = "/recordings"
 data_file_path = f"{audio_local_dir}/data.json"
+s3_data_url = f"{s3_full_bucket_url}/data.json"
 clip_prefix = "turntable"
 recording_seconds = 11
 #ice_host = "tt.tinymansell.com"
@@ -202,6 +203,7 @@ def record_pi():
         delete_s3_clip(clip_file_name)
     if recordPi:
         print(recordPi)
+        print(f"You can find the data at: {s3_data_url}")
 
 # Run idefinitely, sleeping for 30 seconds in between.
 while True:
