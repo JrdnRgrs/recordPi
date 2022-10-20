@@ -39,14 +39,21 @@ def get_stream_recording():
     #os.system(f"fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
     os.system(f"fIcy -s .mp3 -o {path_name} -M 10 -d 192.168.1.244 8000 /turntable.mp3")
 
+def is_clip_quiet(clip_path):
+    recordingSeg = AudioSegment.from_file(clip_path)
+    loudness = recordingSeg.dBFS
+    if loudness <= -55:
+        print("The volume of the audio sample is too low.")
+        return True
+    else:
+        return False
+
 def get_audio_info(file = True, url = False):
     result = None
 
     if file:
-        recordingSeg = AudioSegment.from_file(path_name)
-        loudness = recordingSeg.dBFS
-        if loudness <= -55:
-            print("The volume of the audio sample is too low.")
+        # Test if the file is too quiet
+        if is_clip_quiet(path_name):
             return
         files = {
             'file' : open(path_name, "rb"),
@@ -57,38 +64,31 @@ def get_audio_info(file = True, url = False):
         }
         result = requests.post('https://api.audd.io/', data=data, files = files)
     if url:
-        file_exists = exists(path_name)
-#        if file_exists:
-#             sleep(10)
+        # Download the fIcy recorded file 
         mr = requests.get(audio_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
         if mr.status_code == 200:
             with open(path_name, 'wb') as f:
                 mr.raw.decode_content = True
                 shutil.copyfileobj(mr.raw, f)
-        recordingSeg = AudioSegment.from_file(path_name)
-        loudness = recordingSeg.dBFS
-        #print(f"Using audio_url: {audio_url}")
-        if loudness <= -55:
-            print("The volume of the audio sample is too low.")
+
+        # Test if the file is too quiet
+        if is_clip_quiet(path_name):
             return
+
         data = {
             'api_token': token,
             'url': audio_url,
             'return': 'timecode,spotify',
         }
-#        sleep(1)
-#        run_api = should_api_run()
-#        while run_api == False:
-#            sleep(10)
-#            run_api = should_api_run()
-#        if run_api:
         result = requests.post('https://api.audd.io/', data=data)
-    #print(result.text)
-    #jsonString=(result.text)
+    
+    jsonString=(result.text)
+    #print(jsonString)
+    file_exists = exists(path_name)
     if file_exists:
         #sleep(3)
         os.remove(path_name)
-    r = json.loads(result.text)
+    r = json.loads(jsonString)
     if(result.status_code == requests.codes.ok):
         with open(data_filename, 'w') as f:
             json.dump(r, f, ensure_ascii=False, indent=4)
@@ -97,30 +97,17 @@ def get_audio_info(file = True, url = False):
         album = r["result"]["album"]
         release_date = r["result"]["release_date"]
         release_year = release_date[0:4]
-        #songUrl = r["result"]["spotify"]["external_urls"]["spotify"]
-        #artistUrl = r["result"]["spotify"]["album"]["artists"][0]["external_urls"]["spotify"]
-        #imageLink = r["result"]["spotify"]["album"]["images"][0]["url"]
-        #arrAll = [artist, title, album, songUrl, artistUrl, imageLink]
-        arrAll = [artist, title, album, release_date]
-        #outPrint1 = f"{title} - {artist}"
-        #outPrint2 = f"{album} ({release_year})"
-        #print(outPrint1)
-        #print(outPrint2)
+        arrAll = [artist, title, album, release_year]
         return arrAll
     else:
-        print(result.text)
+        print(jsonString)
 
 # Record 10 seconds of audio from stream
-#get_stream_recording()
-
+get_stream_recording()
 # Send recording to AuD and output response to data.json
 if url_flag == "yes":
-    get_stream_recording()
-    #get_audio_info(url=True,file=False)
     recordPi = get_audio_info(url=True,file=False)
 else:
-    get_stream_recording()
-    #get_audio_info()
     recordPi = get_audio_info()
 
 if recordPi:
