@@ -14,11 +14,13 @@ from datetime import timedelta
 # Read Env Vars
 load_dotenv()
 token = os.environ.get("API_TOKEN")
-url_flag = os.environ.get("URL_FLAG")
+url_flag = "no"
+#url_flag = os.environ.get("URL_FLAG")
 aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 region_name = os.environ.get("AWS_DEFAULT_REGION")
 bucket_name = os.environ.get("BUCKET_NAME")
+
 s3_upload_prefix = "audio"
 s3_full_bucket_url = f"https://{bucket_name}.s3.amazonaws.com/{s3_upload_prefix}"
 # S3 stuff
@@ -30,10 +32,13 @@ return_values = 'timecode,spotify'
 audio_local_dir = "/recordings"
 data_file_path = f"{audio_local_dir}/data.json"
 clip_prefix = "turntable"
-recording_seconds = "11"
-ice_host = "192.168.1.244 8000"
-ice_port = "8000"
-ice_mount = "/turntable.mp3"
+recording_seconds = 11
+#ice_host = "tt.tinymansell.com"
+#ice_port = 80
+#ice_mount = "turntable.mp3"
+ice_host = os.environ.get("ICE_HOST")
+ice_port = os.environ.get("ICE_PORT")
+ice_mount = os.environ.get("ICE_MOUNT")
 url_prefix = "https://tinymansell.com/audio"
 api_url="https://api.audd.io/"
 
@@ -55,8 +60,9 @@ def upload_recording_s3(clip_path,clip_file_name):
     response = s3.upload_file(clip_path, bucket_name, f"{s3_upload_prefix}/{clip_file_name}")
 
 def get_stream_recording(clip_path):
-    os.system(f"fIcy -s .mp3 -o {clip_path} -M 10 -d 192.168.1.244 8000 /turntable.mp3")
-    #upload_recording_s3(clip_path,clip_file_name)
+    #print(f"Recording {recording_seconds} second clip from stream: {ice_host}/{ice_mount}")
+    #print(f"Saving recording to: {clip_path}")
+    os.system(f"fIcy -s .mp3 -o {clip_path} -M {recording_seconds} -d {ice_host} {ice_port} /{ice_mount}")
 
 def download_stream_recording(clip_url,save_path):
     mr = requests.get(clip_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
@@ -188,7 +194,7 @@ def record_pi():
 
     # Send recording to AuD and output response to data.json
     if url_flag == "no":
-        recordPi = get_audio_info(clip_path_name=clip_path_name,url=False,file=True)
+        recordPi = get_audio_info("",clip_path_name=clip_path_name,url=False,file=True)
         delete_s3_clip(clip_file_name)
     else:
         #recordPi = get_audio_info(audio_clip_url,clip_path_name,url=True,file=False)
