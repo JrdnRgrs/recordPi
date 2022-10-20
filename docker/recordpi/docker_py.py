@@ -83,7 +83,7 @@ def api_call_file(api_token,api_return_values,local_path_name):
     result = requests.post('https://api.audd.io/', data=data, files = files)
     return result
 
-def get_audio_info(file = True, url = False):
+def get_audio_info(file = False, url = True):
     result = None
 
     if file:
@@ -92,31 +92,34 @@ def get_audio_info(file = True, url = False):
     if url:
         result = api_call_url(token,audio_url,return_values,path_name)
     
-    jsonString=(result.text)
-    #print(jsonString)
-    file_exists = exists(path_name)
-    if file_exists:
-        #sleep(3)
-        os.remove(path_name)
-    r = json.loads(jsonString)
+    result_text=(result.text)
+    json_string = json.loads(result_text)
     if(result.status_code == requests.codes.ok):
         with open(data_filename, 'w') as f:
-            json.dump(r, f, ensure_ascii=False, indent=4)
-        artist = r["result"]["artist"]
-        title = r["result"]["title"]
-        album = r["result"]["album"]
-        release_date = r["result"]["release_date"]
-        release_year = release_date[0:4]
-        arrAll = [artist, title, album, release_year]
-        return arrAll
+            json.dump(json_string, f, ensure_ascii=False, indent=4)
+        pretty_result = format_result(json_string)
+        return pretty_result
     else:
-        print(jsonString)
+        print(result_text)
+
+    file_exists = exists(path_name)
+    if file_exists:
+        os.remove(path_name)
+
+def format_result(r):
+    artist = r["result"]["artist"]
+    title = r["result"]["title"]
+    album = r["result"]["album"]
+    release_date = r["result"]["release_date"]
+    release_year = release_date[0:4]
+    arrAll = [artist, title, album, release_year]
+    return arrAll
 
 # Record 10 seconds of audio from stream
 get_stream_recording()
 # Send recording to AuD and output response to data.json
-if url_flag == "yes":
-    recordPi = get_audio_info(url=True,file=False)
+if url_flag == "no":
+    recordPi = get_audio_info(url=False,file=True)
 else:
     recordPi = get_audio_info()
 
