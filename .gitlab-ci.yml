@@ -29,10 +29,6 @@ python-tools-build:
     #- docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
     #- docker push "$CI_REGISTRY_IMAGE${tag}"
   # Run this job in a branch where a Dockerfile exists
-  rules:
-    - if: $CI_COMMIT_BRANCH
-      exists:
-        - Dockerfile
 
 recordpi-build:
   # Use the official docker image.
@@ -50,7 +46,3 @@ recordpi-build:
     #- docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
     #- docker push "$CI_REGISTRY_IMAGE${tag}"
   # Run this job in a branch where a Dockerfile exists
-  rules:
-    - if: $CI_COMMIT_BRANCH
-      exists:
-        - Dockerfile
