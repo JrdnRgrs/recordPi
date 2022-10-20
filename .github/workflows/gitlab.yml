@@ -1,22 +1,41 @@
-name: GitlabSync
+name: ci
 
 on:
-  - push
-  - delete
+  push:
+    branches:
+      - 'main'
 
 jobs:
-  sync:
+  docker:
     runs-on: ubuntu-latest
-    name: Git Repo Sync
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - uses: wangchucheng/git-repo-sync@v0.1.0
-      with:
-        # Such as https://github.com/wangchucheng/git-repo-sync.git
-        target-url: ${{ secrets.TARGET_URL }}
-        # Such as wangchucheng
-        target-username: ${{ secrets.TARGET_USERNAME }}
-          # You can store token in your project's 'Setting > Secrets' and reference the name here. Such as ${{ secrets.ACCESS\_TOKEN }}
-        target-token: ${{ secrets.TARGET_TOKEN }}
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          registry: registry.gitlab.com
+          username: ${{ secrets.TARGET_USERNAME }}
+          password: ${{ secrets.TARGET_TOKEN }}
+      -
+        name: Build and push py
+        uses: docker/build-push-action@v3
+        with:
+          context: ./docker/python-tools
+          platforms: linux/amd64,linux/arm64
+          push: true
+      -
+        name: Build and push recordpi
+        uses: docker/build-push-action@v3
+        with:
+          context: ./docker/python-tools
+          platforms: linux/amd64,linux/arm64
+          push: true
