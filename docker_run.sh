@@ -1,3 +1,1 @@
-#!/bin/sh
-python3 record.py
-docker run --name "recordPi" --rm -v /recordings/turntable.mp3:/recordings/turntable.mp3 -v /media/Library/docker/apache/basic/data.json:/data.json --env-file ./.env python-docker
+docker run --name "recordPi" --rm -v /media/Library/docker/apache/basic/audio/:/recordings/ --env-file ./.env registry.gitlab.com/jrdnrgrs/recordpi
