@@ -25,9 +25,9 @@ python-tools-build:
   # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
     - cd ./docker/python-tools/
-    - echo "$CI_REGISTRY_IMAGE - $CI_REGISTRY_IMAGE"
-    #- docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
-    #- docker push "$CI_REGISTRY_IMAGE${tag}"
+    #- echo "$CI_REGISTRY_IMAGE - $CI_REGISTRY_IMAGE"
+    - docker build -t "$CI_REGISTRY_IMAGE/python-tools" .
+    - docker push "$CI_REGISTRY_IMAGE/python-tools"
   # Run this job in a branch where a Dockerfile exists
 
 recordpi-build:
@@ -42,7 +42,7 @@ recordpi-build:
   # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
     - cd ./docker/recordpi/
-    - echo "$CI_REGISTRY_IMAGE - $CI_REGISTRY_IMAGE"
-    #- docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
-    #- docker push "$CI_REGISTRY_IMAGE${tag}"
+    #- echo "$CI_REGISTRY_IMAGE - $CI_REGISTRY_IMAGE"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE" .
+    - docker push "$CI_REGISTRY_IMAGE"
   # Run this job in a branch where a Dockerfile exists
