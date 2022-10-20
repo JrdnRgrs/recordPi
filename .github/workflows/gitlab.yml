@@ -30,17 +30,15 @@ jobs:
         name: Build and push py
         uses: docker/build-push-action@v3
         with:
-          registry: registry.gitlab.com/jrdnrgrs/recordpi/python-tools
           context: ./docker/python-tools
           platforms: linux/arm64
           push: true
-          tags: latest
+          tags: registry.gitlab.com/jrdnrgrs/recordpi/python-tools
       -
         name: Build and push recordpi
         uses: docker/build-push-action@v3
         with:
-          registry: registry.gitlab.com/jrdnrgrs/recordpi
           context: ./docker/recordpi
           platforms: linux/arm64
           push: true
-          tags: latest
+          tags: registry.gitlab.com/jrdnrgrs/recordpi
