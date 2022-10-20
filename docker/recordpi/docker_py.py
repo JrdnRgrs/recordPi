@@ -14,8 +14,8 @@ from datetime import timedelta
 # Read Env Vars
 load_dotenv()
 token = os.environ.get("API_TOKEN")
-url_flag = "no"
-#url_flag = os.environ.get("URL_FLAG")
+#url_flag = "no"
+url_flag = os.environ.get("URL_FLAG")
 aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
 aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 region_name = os.environ.get("AWS_DEFAULT_REGION")
