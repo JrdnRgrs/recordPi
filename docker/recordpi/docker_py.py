@@ -3,7 +3,11 @@ load_dotenv()
 from pydub import AudioSegment
 import os
 token = os.environ.get("API_TOKEN")
+return_values = 'timecode,spotify'
 url_flag = os.environ.get("URL_FLAG")
+audio_local_dir = "/recordings"
+data_file_path = f"{audio_local_dir}/data.json"
+url_prefix = "https://tinymansell.com/audio"
 import requests
 import json
 import shutil
@@ -20,9 +24,9 @@ def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
 myNum=id_generator(4)
 file_name = f"turntable-{myNum}.mp3"
 path_name = f"/recordings/{file_name}"
-audio_url = f"https://tinymansell.com/audio/{file_name}"
-data_filename = "/recordings/data.json"
-return_values = 'timecode,spotify'
+
+
+
 
 def is_file_older_than (file, delta): 
     cutoff = datetime.utcnow() - delta
@@ -36,9 +40,10 @@ def should_api_run():
     if data_file_exists:
         is_file_older_than(data_filename, timedelta(seconds=162))
 
-def get_stream_recording():
+def get_stream_recording(clip_path):
     #os.system(f"fIcy -s .mp3 -o /recordings/turntable.mp3 -M 10 -d 192.168.1.244 8000 /turntable.mp3")
-    os.system(f"fIcy -s .mp3 -o {path_name} -M 10 -d 192.168.1.244 8000 /turntable.mp3")
+    os.system(f"fIcy -s .mp3 -o {clip_path} -M 10 -d 192.168.1.244 8000 /turntable.mp3")
+    #return clip_path
 
 def download_stream_recording(clip_url,save_path):
     mr = requests.get(clip_url, stream=True, headers={'User-agent': 'Mozilla/5.0'})
@@ -56,6 +61,11 @@ def is_clip_quiet(clip_path):
     else:
         return False
 
+def delete_clip(clip_path_name):
+    file_exists = exists(clip_path_name)
+    if file_exists:
+        os.remove(clip_path_name)
+
 def api_call_url(api_token,clip_url,api_return_values,local_path_name):
     data = {
         'api_token': api_token,
@@ -66,6 +76,7 @@ def api_call_url(api_token,clip_url,api_return_values,local_path_name):
     download_stream_recording(clip_url,local_path_name)
     # Test if the file is too quiet
     if is_clip_quiet(local_path_name):
+        delete_clip(local_path_name)
         return
     result = requests.post('https://api.audd.io/', data=data)
     return result
@@ -79,32 +90,38 @@ def api_call_file(api_token,api_return_values,local_path_name):
     }
     # Test if the file is too quiet
     if is_clip_quiet(local_path_name):
+        delete_clip(local_path_name)
         return
     result = requests.post('https://api.audd.io/', data=data, files = files)
     return result
 
-def get_audio_info(file = False, url = True):
+def get_audio_info(aud_url,clip_path_name,file = False, url = True):
     result = None
 
     if file:
         result = api_call_file(token,return_values,path_name)
 
     if url:
-        result = api_call_url(token,audio_url,return_values,path_name)
+        result = api_call_url(token,aud_url,return_values,clip_path_name)
     
+    if not result:
+        return
+
     result_text=(result.text)
     json_string = json.loads(result_text)
+    delete_clip(clip_path_name)
+    #file_exists = exists(clip_path_name)
+    #if file_exists:
+    #    os.remove(clip_path_name)
     if(result.status_code == requests.codes.ok):
-        with open(data_filename, 'w') as f:
+        with open(data_file_path, 'w') as f:
             json.dump(json_string, f, ensure_ascii=False, indent=4)
         pretty_result = format_result(json_string)
         return pretty_result
     else:
         print(result_text)
 
-    file_exists = exists(path_name)
-    if file_exists:
-        os.remove(path_name)
+    
 
 def format_result(r):
     artist = r["result"]["artist"]
@@ -115,13 +132,25 @@ def format_result(r):
     arrAll = [artist, title, album, release_year]
     return arrAll
 
-# Record 10 seconds of audio from stream
-get_stream_recording()
-# Send recording to AuD and output response to data.json
-if url_flag == "no":
-    recordPi = get_audio_info(url=False,file=True)
-else:
-    recordPi = get_audio_info()
+def record_pi():
+    call_num=id_generator(4)
+    clip_file_name = f"turntable-{call_num}.mp3"
+    clip_path_name = f"{audio_local_dir}/{clip_file_name}"
+    audio_clip_url = f"{url_prefix}/{clip_file_name}"
+    # Record 10 seconds of audio from stream
+    get_stream_recording(clip_path_name)
 
-if recordPi:
-    print(recordPi)
+    # Send recording to AuD and output response to data.json
+    if url_flag == "no":
+        recordPi = get_audio_info(clip_path_name=clip_path_name,url=False,file=True)
+    else:
+        recordPi = get_audio_info(audio_clip_url,clip_path_name,url=True,file=False)
+    if recordPi:
+        print(recordPi)
+
+# Run idefinitely, sleeping for 30 seconds in between.
+while True:
+    print("Running RecordPi")
+    record_pi()
+    print("Sleeping for 30 seconds")
+    sleep(30)
