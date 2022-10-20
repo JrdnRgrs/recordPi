@@ -83,7 +83,7 @@ def get_audio_info(file = True, url = False):
 #            run_api = should_api_run()
 #        if run_api:
         result = requests.post('https://api.audd.io/', data=data)
-    print(result.text)
+    #print(result.text)
     #jsonString=(result.text)
     if file_exists:
         #sleep(3)
@@ -116,12 +116,12 @@ def get_audio_info(file = True, url = False):
 # Send recording to AuD and output response to data.json
 if url_flag == "yes":
     get_stream_recording()
-    get_audio_info(url=True,file=False)
-    #recordPi = get_audio_info(url=True,file=False)
+    #get_audio_info(url=True,file=False)
+    recordPi = get_audio_info(url=True,file=False)
 else:
     get_stream_recording()
-    get_audio_info()
-#recordPi = get_audio_info()
+    #get_audio_info()
+    recordPi = get_audio_info()
 
-#if recordPi:
-#    print(recordPi)
+if recordPi:
+    print(recordPi)
