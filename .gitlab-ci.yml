@@ -9,11 +9,14 @@
 #
 # This template uses one generic job with conditional builds
 # for the default branch and all other (MR) branches.
+stages:
+- python
+- recordpi
 
 python-tools-build:
   # Use the official docker image.
   image: docker:latest
-  stage: build
+  stage: python
   services:
     - docker:dind
   before_script:
@@ -34,7 +37,7 @@ python-tools-build:
 recordpi-build:
   # Use the official docker image.
   image: docker:latest
-  stage: build
+  stage: recordpi
   services:
     - docker:dind
   before_script:
