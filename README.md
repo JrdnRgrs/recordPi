@@ -1,156 +1,94 @@
 # Record Pi 3.0 (once more with feeling)
 
-The third try at trying to identify the songs I am listening to on my record player. 
+The third try at trying to identify the songs I am listening to on my record player.
 
 ## Background
 
-This idea has had many iterations, but this is the 2022 version, this time with more knowledge. 
+This idea has had many iterations, but this is the 2022 version, this time with more knowledge.
 
-### Hardware: 
+### Pre Reqs
 
-- [Pioneer PL-530](https://www.manualslib.com/manual/1047058/Pioneer-Pl-530.html#manual) Full Automatic Turntable
-  - [ART DJPREII pre amp](https://www.amazon.com/ART-DJPREII-Phono-Preamplifier/dp/B000AJR482)
-  - 
-- Raspberry Pi Zero W
-  - Raspbian OS
-- Raspberry Pi 4
-  - Raspbian OS
-  - Any home server would do
-- [Behringer UCA202](https://www.behringer.com/product.html?modelCode=P0484) usb sound card
-
-#### Hardware Setup:
-
-- Turntable RCA output to pre-amp
-- Pre-Amp RCA output to Behringer
-- Behringer RCA output to speaker reciever
-- Behringer USB to Raspberry Pi Zero W usb (through mini usb dongle)
-
-![](diagram.jpg)
-
-
-### Icecast Server Setup
-
-On the Pi Zero, we first need to set up an icecast and darkice server and mount. Lets get some stuff set up. Update everything and install icecast2. Go through the config and keep it pointed at localhost. Set up passwords and accounts however you want.
-
-```
-sudo apt update -y && sudo apt upgrade -y
-sudo apt install icecast2
-
-```
-
-It is probably a good idea to backup the initial icecast config, but you dont really need to edit it past the initial config.
-
-```
-sudo cp /etc/icecast2/icecast.xml /etc/icecast2/icecast.xml.backup
-```
-
-Use "aplay -l" to get a list of the devices on your system. The hw:X,Y comes from this mapping of your hardware -- in this case, X is the card number, while Y is the device number. If you've only got the usb card plugged in you are likely going to be working with hw:1,0.
-
-
-Install darkice and set up the config and the service. Darkice is the software that is recording from the USB device and encoding that into MP3. To configure it, create or edit the file /etc/darkice.cfg, and put this in:
-
-```
-sudo apt-get install darkice
-sudo nano /etc/darkice.cfg
-```
-
-```
-[general]
-duration        = 0             # 0 = forever
-bufferSecs      = 1             # buffer in seconds
-reconnect       = yes
-realtime        = yes
-
-[input]
-device          = hw:1,0    # Soundcard device for the audio input
-sampleRate      = 44100         # 44.1 kHz sample rate
-bitsPerSample   = 16            # 16 bits
-channel         = 2             # 2 = stereo
-
-[icecast2-0]
-bitrateMode     = cbr           # cbr = constant bit rate
-format          = mp3
-bitrate         = 320           # bitrate
-server          = localhost
-port            = 8000          # port of the Icecast2 server
-password        = hackme        # password for the Icecast2 server
-mountPoint      = turntable.mp3 # mount point on the Icecast2 server
-name            = Turntable
-description     = Turntable Audio Stream via USB
-
-```
-
-
-
-Auto Start the services
-
-Start the Icecast2 service and enable autostart:
-
-```
-sudo systemctl enable icecast2.service
-sudo service icecast2 start
-```
-
-create the file `/etc/systemd/system/darkice1.service`
-
-```
-[Unit]
-Description=DarkIce audio streamer
-After=network.target
-
-[Service]
-ExecStart=/usr/bin/darkice -c /etc/darkice.cfg
-StandardOutput=inherit
-StandardError=inherit
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-
-Start the DarkIce service and enable autostart:
-
-```
-sudo systemctl enable darkice1.service
-sudo service darkice1 status
-```
-
-
-Check the Icecast2 server status by visiting http://192.168.1.33:8000 in your browser.
-
-You can listen to the actual audio stream at http://192.168.1.33:8000/turntable.mp3 in your browser. You should be able to hear the music of your turntable.
-
-
-This is only half of this project though. Now that we can listen to our records from this server, we want to do something with the audio.
-
+See [Hardware.md](./Hardware.md) for details on the backend set up. That is the easy part.
 
 ### Grabbing and Identifying the Audio
 
-We can leave the Pi Zero now as it isnt that powerful and should probably only be doing one thing.
+You will need [fIcy](https://gitlab.com/wavexx/fIcy) on your machine for this. See the link for installation instructions.
 
-You do the rest from any home server of your choice, but I'm on a raspberry pi 4 home server. 
+fIcy will take the URL of a stream and record a clip for us to pass to the APIs. Usually, you'd run this:
 
-From this server, we first want to use fIcy to grab a recording of the icecast server
-
-```
+``` sh
 sudo fIcy -s .mp3 -o {recordingFile} -M 10 -d {host} {port} {mount}
 ```
 
-I have simplified this down to `record.py` for ease of use. Be sure to create the `/recordings/` directory or change it to one that exists.
+I have simplified this down to [./tools/ficy.py](./tools/ficy.py) for ease of use. You can now run it like this:
 
-Now we have a 10 second recording of our stream at `/recordings/turntable.mp3` to give to the [AudD.io API ](https://audd.io/).
-
-First, save your api token to `.env` as `API_TOKEN` so you dont need to hardcode it.
-
-I have combined the API call and the record.py functionality into a single script called `tinyMansell.py`. This will record 10 seconds of audio from the stream, upload to the API and print the song, artist, and album, while outputting the raw json to `data.json`.
-
-Futhermore, I have extended this into a docker container for even simpler use. Just change into the `docker` directory and run 
-
-```
-docker build --tag recordpi .
+``` python
+python3 ./tools/ficy.py -o /recordings/turntable.mp3 -u {stream_host} -m {stream_mount}
 ```
 
-Once built, you can run it with the following command, or just run the `docker_run.sh` file which will do everything for you all at once.
+-o, --output - output file. You'll pass this into the other scripts later.
+-u, --host - host of the stream to record from. For this project, this is the icecast server.
+-m, --mount - icecast mount/endpoint. (ex: stream.mp3)
 
-One last thing I added was to add a volume on the above docker container that is created so that the data.json file written in the end is written to a path where an apache server is serving. This is more of just a proof of concept of a super simple "API" for this service..
+Now we have a 10 second recording of our stream at `/recordings/turntable.mp3` to give to an API.
+
+## Music Recognition Services
+
+### Audd.io
+
+- Very simple API.
+- 1000 requests a month for $5
+- $5 for every 1000 after
+
+- [Dashboard](https://dashboard.audd.io/)
+
+Entry Script
+
+``` python
+python3 ./audd/audd.py -f /recordings/turntable.mp3
+```
+
+### ACR Cloud
+
+2 tools for recognition:
+
+- Identify API
+- File Scanner
+
+Pricing is unknown, but could be anywhere from 100-1000 requests a month for free.
+
+- [Identify Projects](https://console.acrcloud.com/avr?region=us-west-2#/projects/online) (upload)
+- [File Scanning Containers](https://console.acrcloud.com/filescanning?region=us-west-2#/fs-containers) (upload+url)
+
+Entry Scripts
+
+ID API
+
+``` python
+python3 ./acrcloud/id/acr_id.py -f /recordings/turntable.mp3
+```
+
+File Scan API
+
+``` python
+python3 ./acrcloud/fs/acr_fs.py -f /recordings/turntable.mp3
+```
+
+### Shazam API
+
+A bit stricter rules for uploading, but can do it with smaller files.
+
+500 requests a month for free
+
+5000 requests a month for $20, + $0.02 each other
+
+- [Web Api](https://rapidapi.com/apidojo/api/shazam)
+
+### audiotag.info
+
+Archaic, can't even get it to work.
+
+- 100k credits - $40 (double free monthly)
+
+- [Docs](https://user.audiotag.info/doc/AudioTag-API.pdf)
+- [Dashboard](https://user.audiotag.info/)
