@@ -14,7 +14,7 @@ mount=args.mount
 secs=10
 port=80
 def get_stream_recording(clip_path):
-    os.system(f"fIcy -s .mp3 -n -o {clip_path} -M {secs} -d {host} {port} /{mount}")
+    os.system(f"fIcy -s .mp3 -o {clip_path} -M {secs} -d {host} {port} /{mount}")
 
 get_stream_recording(output)
 print(f"Saved file to {output}")

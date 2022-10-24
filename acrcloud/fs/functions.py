@@ -46,8 +46,12 @@ def del_call(id):
 
 
 def save_data_file(data):
-  with open("data.json", 'w') as f:
+  good_data = data["data"][0]["results"]
+  with open("response.json", 'w') as f:
+    #json.dump(good_data, f, ensure_ascii=False, indent=4)
     json.dump(data, f, ensure_ascii=False, indent=4)
+  with open("data.json", 'w') as f:
+    json.dump(good_data, f, ensure_ascii=False, indent=4)
 
 def acr_fs_get_info(id):
   my_result = get_call(id)
