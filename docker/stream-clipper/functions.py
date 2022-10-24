@@ -1,5 +1,6 @@
 from envs import *
 import os
+import time
 import random
 import string
 import json
@@ -16,6 +17,13 @@ def get_stream_recording(clip_suffix,secs=recording_secs,host=ice_host,port=ice_
     os.system(f"fIcy -s .mp3 -o {clip_path} -M {secs} -d {host} {port} /{mount}")
     return clip_path
 
+def delete_old_clips():
+    with os.scandir(clip_base_path) as listOfEntries:
+        for entry in listOfEntries:
+            if f"{clip_base_name}-" in entry.name:
+                age = time.time() - entry.stat().st_mtime
+                if age > 180:
+                    os.remove(os.path.join(clip_base_path, entry.name))
 
 def get_clip_suffix(num_digits):
     clip_suffix=id_generator(num_digits)

@@ -16,6 +16,6 @@ while True:
     else:
         should_run = True
     set_api_data(my_clip_name,my_clip_suffix,should_run)
-
+    delete_old_clips()
     print("Sleeping for 30 seconds")
     sleep(30)
