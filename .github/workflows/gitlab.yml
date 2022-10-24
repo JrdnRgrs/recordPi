@@ -31,14 +31,22 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: ./docker/python-tools
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: registry.gitlab.com/jrdnrgrs/recordpi/python-tools
+      -
+        name: Build and push stream-clipper
+        uses: docker/build-push-action@v3
+        with:
+          context: ./docker/stream-clipper
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: registry.gitlab.com/jrdnrgrs/recordpi/stream-clipper
       -
         name: Build and push recordpi
         uses: docker/build-push-action@v3
         with:
           context: ./docker/recordpi
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: registry.gitlab.com/jrdnrgrs/recordpi

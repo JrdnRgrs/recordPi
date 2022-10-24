@@ -1,4 +1,5 @@
 *.env*
 dev/*
 *data.json*
+*response.json*
 *__pycache__*
