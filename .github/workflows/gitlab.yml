@@ -42,7 +42,7 @@ jobs:
             aud:
               - 'docker/audd-pi/**'
             docker:
-              - 'docker/**'
+              - 'docker/**/**'
       -
         if: steps.changes.outputs.py == 'true'
         name: Build and push py
