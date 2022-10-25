@@ -1,0 +1,63 @@
+version: '3.3'
+services:
+  stream-clipper:
+    image: registry.gitlab.com/jrdnrgrs/recordpi/stream-clipper
+    #env_file: .env
+    network_mode: "bridge"
+    volumes:
+      - recordingsPi:/recordings
+    environment:
+      - ICE_HOST
+      - ICE_PORT
+      - ICE_MOUNT
+      - CLIP_BASE_NAME
+      - CLIP_BASE_PATH
+      - CLIP_API_URL
+      - RECORDING_SECS
+    tty: true
+
+  clip-server:
+    image: elswork/json-server
+    network_mode: "bridge"
+    depends_on:
+      - stream-clipper
+    ports: 
+      - 3000:3000
+    volumes:
+      - recordingsPi:/recordings
+    command: --watch /recordings/clip.json
+
+  audd:
+    image: audd-pi
+    network_mode: "bridge"
+    depends_on:
+      - clip-server
+      - music-server
+    #env_file: .env
+    volumes:
+      - recordingsPi:/recordings
+    environment:
+      - API_TOKEN
+      - ICE_HOST
+      - ICE_PORT
+      - ICE_MOUNT
+      - CLIP_BASE_NAME
+      - CLIP_BASE_PATH
+      - CLIP_API_URL
+      - RETURN_VALUES
+    restart: on-failure
+    tty: true
+
+  music-server:
+    network_mode: "bridge"
+    image: elswork/json-server
+    depends_on:
+      - clip-server
+    ports: 
+      - 3001:3000
+    volumes:
+      - recordingsPi:/recordings
+    command: --watch /recordings/data.json
+
+volumes:
+  recordingsPi:

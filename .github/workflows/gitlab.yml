@@ -43,10 +43,10 @@ jobs:
           push: true
           tags: registry.gitlab.com/jrdnrgrs/recordpi/stream-clipper
       -
-        name: Build and push recordpi
+        name: Build and push audd-pi
         uses: docker/build-push-action@v3
         with:
-          context: ./docker/recordpi
+          context: ./docker/audd-pi
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: registry.gitlab.com/jrdnrgrs/recordpi
+          tags: registry.gitlab.com/jrdnrgrs/recordpi/audd-pi
