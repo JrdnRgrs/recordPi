@@ -26,7 +26,20 @@ jobs:
           registry: registry.gitlab.com
           username: ${{ secrets.TARGET_USERNAME }}
           password: ${{ secrets.TARGET_TOKEN }}
+      - 
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            py:
+              - 'docker/python-tools/**'
+            clipper:
+              - 'docker/stream-clipper/**'
+              - 'docker/python-tools/**'
+            aud:
+              - 'docker/audd-pi/**'
       -
+        if: steps.changes.outputs.py == 'true'
         name: Build and push py
         uses: docker/build-push-action@v3
         with:
@@ -35,6 +48,7 @@ jobs:
           push: true
           tags: registry.gitlab.com/jrdnrgrs/recordpi/python-tools
       -
+        if: steps.changes.outputs.clipper == 'true'
         name: Build and push stream-clipper
         uses: docker/build-push-action@v3
         with:
@@ -43,6 +57,7 @@ jobs:
           push: true
           tags: registry.gitlab.com/jrdnrgrs/recordpi/stream-clipper
       -
+        if: steps.changes.outputs.aud == 'true'
         name: Build and push audd-pi
         uses: docker/build-push-action@v3
         with:
