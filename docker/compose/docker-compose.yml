@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   stream-clipper:
-    image: ${CONTAINER_REGISTRY_ROOT}/stream-clipper
+    image: ${CONTAINER_REGISTRY_ROOT}/stream-clipper:latest
     #env_file: .env
     network_mode: "bridge"
     volumes:
@@ -17,7 +17,7 @@ services:
     tty: true
 
   clip-server:
-    image: elswork/json-server
+    image: elswork/json-server:latest
     network_mode: "bridge"
     depends_on:
       - stream-clipper
@@ -28,7 +28,7 @@ services:
     command: --watch ${CLIP_BASE_PATH}/clip.json
 
   audd:
-    image: ${CONTAINER_REGISTRY_ROOT}/audd-pi
+    image: ${CONTAINER_REGISTRY_ROOT}/audd-pi:latest
     network_mode: "bridge"
     depends_on:
       - clip-server
@@ -50,7 +50,7 @@ services:
 
   music-server:
     network_mode: "bridge"
-    image: elswork/json-server
+    image: elswork/json-server:latest
     depends_on:
       - clip-server
     ports: 

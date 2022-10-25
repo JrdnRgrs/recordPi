@@ -3,3 +3,4 @@ dev/*
 *data.json*
 *response.json*
 *__pycache__*
+*.mp3
