@@ -60,7 +60,7 @@ def clip_api_call():
 
 def should_run_api(clip_call):
     #call_result = clip_api_call()
-    should_run = clip_call["clip"][0]["should_run"]
+    should_run = clip_call[0]["should_run"]
     if should_run:
         print("Audio Detected: The API will run")
         return True
