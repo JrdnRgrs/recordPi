@@ -42,7 +42,9 @@ jobs:
             aud:
               - 'docker/audd-pi/**'
             docker:
-              - 'docker/**/**'
+              - 'docker/audd-pi/**'
+              - 'docker/stream-clipper/**'
+              - 'docker/python-tools/**'
       -
         if: steps.changes.outputs.py == 'true'
         name: Build and push py
