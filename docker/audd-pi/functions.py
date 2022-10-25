@@ -19,9 +19,6 @@ def post_call(file_path,return_values):
     return json_string
 
 def save_data_file(data):
-    #with open("data.json", 'w') as f:
-    #    json.dump(data, f, ensure_ascii=False, indent=4)
-
     with open(f"{clip_base_path}/response.json", 'w') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
     if data["status"] == "success":
@@ -59,7 +56,6 @@ def clip_api_call():
     return json_string
 
 def should_run_api(clip_call):
-    #call_result = clip_api_call()
     should_run = clip_call[0]["should_run"]
     if should_run:
         print("Audio Detected: The API will run")

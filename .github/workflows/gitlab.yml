@@ -35,16 +35,16 @@ jobs:
         with:
           filters: |
             py:
-              - './docker/python-tools/**'
+              - 'docker/python-tools/**'
             clipper:
-              - './docker/stream-clipper/**'
-              - './docker/python-tools/**'
+              - 'docker/stream-clipper/**'
+              - 'docker/python-tools/**'
             aud:
-              - './docker/audd-pi/**'
+              - 'docker/audd-pi/**'
             docker:
-              - './docker/audd-pi/**'
-              - './docker/stream-clipper/**'
-              - './docker/python-tools/**'
+              - 'docker/audd-pi/**'
+              - 'docker/stream-clipper/**'
+              - 'docker/python-tools/**'
       -
         if: steps.changes.outputs.py == 'true'
         name: Build and push py
