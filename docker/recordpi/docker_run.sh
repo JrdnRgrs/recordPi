@@ -1,1 +1,0 @@
-docker run --name "recordPi" --rm -v /media/Library/docker/apache/basic/audio/:/recordings/ --env-file ./.env registry.gitlab.com/jrdnrgrs/recordpi

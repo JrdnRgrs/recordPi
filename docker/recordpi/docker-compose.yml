@@ -2,8 +2,9 @@ version: '3.3'
 services:
   stream-clipper:
     container_name: recordpi-stream-clipper
-    image: ${CONTAINER_REGISTRY_ROOT}/stream-clipper:latest
-    #env_file: .env
+    #image: ${CONTAINER_REGISTRY_ROOT}/stream-clipper:latest
+    image: stream-clipper:latest
+    env_file: .env
     network_mode: "bridge"
     volumes:
       - recordPi:${CLIP_BASE_PATH}
@@ -17,27 +18,14 @@ services:
       - RECORDING_SECS
     tty: true
 
-  clip-server:
-    container_name: recordpi-clip-server
-    image: elswork/json-server:latest
+  recordpi:
+    container_name: recordpi
+    #image: ${CONTAINER_REGISTRY_ROOT}/recordpi:latest
+    image: recordpi:latest
     network_mode: "bridge"
     depends_on:
-      - stream-clipper
-    ports: 
-      - 3000:3000
-    volumes:
-      - recordPi:${CLIP_BASE_PATH}
-      - clip-server-data:/data
-    command: --watch ${CLIP_BASE_PATH}/clip.json
-
-  audd:
-    container_name: recordpi-audd
-    image: ${CONTAINER_REGISTRY_ROOT}/audd-pi:latest
-    network_mode: "bridge"
-    depends_on:
-      - clip-server
       - music-server
-    #env_file: .env
+    env_file: .env
     volumes:
       - recordPi:${CLIP_BASE_PATH}
     environment:
@@ -49,6 +37,12 @@ services:
       - CLIP_BASE_PATH
       - CLIP_API_URL
       - RETURN_VALUES
+      - ACR_ACCESS_TOKEN
+      - ACR_CONTAINER_ID
+      - ACR_ACCESS_KEY
+      - ACR_ACCESS_SECRET
+      - ACR_ID_HOST
+      - PICK_API
     restart: on-failure
     tty: true
 
@@ -56,8 +50,6 @@ services:
     container_name: recordpi-music-server
     network_mode: "bridge"
     image: elswork/json-server:latest
-    depends_on:
-      - clip-server
     ports: 
       - 3001:3000
     volumes:
@@ -68,4 +60,3 @@ services:
 volumes:
   recordPi:
   music-server-data:
-  clip-server-data:

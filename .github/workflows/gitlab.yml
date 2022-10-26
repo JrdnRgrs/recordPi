@@ -25,10 +25,13 @@ jobs:
               - 'docker/python-tools/**'
             aud:
               - 'docker/audd-pi/**'
+            recordpi:
+              - 'docker/recordpi/**'
             docker:
               - 'docker/audd-pi/**'
               - 'docker/stream-clipper/**'
               - 'docker/python-tools/**'
+              - 'docker/recordpi/**'
       -
         if: steps.changes.outputs.docker == 'true'
         name: Set up QEMU
@@ -72,3 +75,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: registry.gitlab.com/jrdnrgrs/recordpi/audd-pi
+      -
+        if: steps.changes.outputs.recordpi == 'true'
+        name: Build and push recordpi
+        uses: docker/build-push-action@v3
+        with:
+          context: ./docker/recordpi
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: registry.gitlab.com/jrdnrgrs/recordpi
